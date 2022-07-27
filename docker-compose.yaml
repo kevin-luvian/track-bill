@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+  tb-fe:
+    container_name: tb-frontend
+    build:
+      context: ./tb-fe
+    ports:
+      - '80:8000'
