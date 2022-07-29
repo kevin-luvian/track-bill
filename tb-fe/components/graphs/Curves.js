@@ -1,36 +1,54 @@
 import React, { useRef, useEffect, useCallback, useMemo } from "react";
-import { convertPoints, gradient, pointsToCanvas } from "~/pkg/processor";
+import { gradient, pointsToCanvas } from "~/pkg/processor";
 import { roundRect } from "~/pkg/processor/draw";
 
 const defData = [
-  { x: 10, y: -10, d: "-10" },
-  { x: 25, y: -50, d: "-50" },
-  { x: 37, y: 80, d: "80" },
-  { x: 50, y: 10, d: "10" },
+  { x: 20, y: -10, d: "-10" },
+  { x: 35, y: -50, d: "-50" },
+  { x: 47, y: 80, d: "80" },
+  { x: 60, y: 10, d: "10" },
   { x: 70, y: 27, d: "27" },
   { x: 90, y: 0, d: "0" },
+  { x: 110, y: 30, d: "30" },
 ];
 
 /**
  * @returns {CanvasRenderingContext2D}
  */
 function getContext(canvas) {
-  const context = canvas.getContext("2d");
-  return context;
+  return canvas.getContext("2d");
 }
 
-const Curves = ({ width = 0, height = 0, points = defData, ...props }) => {
+/**
+ * @param {string} rgb
+ */
+function adjustRGB(rgb, factor) {
+  const rgbArr = rgb.replace(/ /g, "").slice(4, -1).split(",").map(parseInt);
+
+  for (let i = 0; i < rgbArr.length; i++) {
+    rgbArr[i] *= factor;
+  }
+
+  return `rgb(${rgbArr.join(", ")})`;
+}
+
+const Curves = ({
+  width = 0,
+  height = 0,
+  points = defData,
+  bgcolor = "rgb(112, 234, 250)",
+  ...props
+}) => {
   const coverRef = useRef(null);
   const canvasRef = useRef(null);
-  const bgcolor = "#2D1674";
   const fgcolor = "white";
   const lineWidth = 3;
+  const canvasOffset = { l: 30, r: 30, t: 30, b: 120 };
 
   const getPoints = useCallback(() => {
     if (width == 0) return [];
-    const offset = { x: 30, y: 50 };
     const canvas = { width, height };
-    return pointsToCanvas(points, offset, canvas);
+    return pointsToCanvas(points, canvasOffset, canvas);
   }, [points, width, height]);
 
   useEffect(() => {
@@ -73,8 +91,6 @@ const Curves = ({ width = 0, height = 0, points = defData, ...props }) => {
     const mPoints = getPoints();
     if (mPoints.length == 0) return;
 
-    ctx.lineWidth = lineWidth;
-
     // draw curved lines
     const f = -0.25;
     const t = 0.02;
@@ -114,11 +130,25 @@ const Curves = ({ width = 0, height = 0, points = defData, ...props }) => {
       preP = curP;
     });
 
-    ctx.fillStyle = fgcolor;
-    ctx.fill();
-
+    ctx.lineWidth = lineWidth;
     ctx.strokeStyle = bgcolor;
     ctx.stroke();
+
+    ctx.lineTo(width - canvasOffset.r, height - 20);
+    ctx.lineTo(canvasOffset.l, height - 20);
+
+    const grd = ctx.createLinearGradient(0, 0, 0, height);
+    let color = bgcolor.replace(")", ", 0.7)");
+    color = color.replace("rgb", "rgba");
+    grd.addColorStop(0, color);
+
+    color = bgcolor.replace(")", ", 0)");
+    color = color.replace("rgb", "rgba");
+    grd.addColorStop(0.85, color);
+    grd.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+    ctx.fillStyle = grd;
+    ctx.fill();
 
     // draw points
     const radius = 7;
@@ -146,7 +176,7 @@ const Curves = ({ width = 0, height = 0, points = defData, ...props }) => {
 
     const mPoints = getPoints();
     const radius = 10;
-    const rXr = Math.pow(radius, 2);
+    const rXr = Math.pow(radius * 1.5, 2);
 
     // Put your mousemove stuff here
     let hit = false;

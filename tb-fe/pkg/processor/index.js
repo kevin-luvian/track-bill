@@ -1,14 +1,14 @@
 /**
  * @param {[{x:number,y:number}]} points
- * @param {{x:number,y:number}} offset
+ * @param {{l:number,r:number,t:number,b:number}} offset
  * @param {{width:number,height:number}} canvas
  */
 function pointsToCanvas(points, offset, canvas) {
   const pxs = points.map((p, _i, _a) => p.x);
   const pys = points.map((p, _i, _a) => p.y);
 
-  const rxs = convertPoints(pxs, offset.x, canvas.width - offset.x, false);
-  const rys = convertPoints(pys, offset.y, canvas.height - offset.y, true);
+  const rxs = convertPoints(pxs, offset.l, canvas.width - offset.r, false);
+  const rys = convertPoints(pys, offset.b, canvas.height - offset.t, true);
 
   const mPoints = [];
   for (let i = 0; i < rxs.length; i++) {

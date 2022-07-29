@@ -42,7 +42,8 @@ export default function Home() {
           <Curves
             height={graphSize.h}
             width={graphSize.w}
-            style={{ backgroundColor: "#cccc" }}
+            bgcolor="rgb(255,131,0)"
+            // style={{ backgroundColor: "#cccc" }}
           />
         </div>
       </main>
