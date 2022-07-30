@@ -1,4 +1,10 @@
-import React, { useRef, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { gradient, pointsToCanvas } from "~/pkg/processor";
 import { roundRect } from "~/pkg/processor/draw";
 
@@ -6,7 +12,7 @@ const defData = [
   { x: 20, y: -10, d: "-10" },
   { x: 35, y: -50, d: "-50" },
   { x: 47, y: 80, d: "80" },
-  { x: 60, y: 10, d: "10" },
+  { x: 57, y: 10, d: "10" },
   { x: 70, y: 27, d: "27" },
   { x: 90, y: 0, d: "0" },
   { x: 110, y: 30, d: "30" },
@@ -32,23 +38,23 @@ function adjustRGB(rgb, factor) {
   return `rgb(${rgbArr.join(", ")})`;
 }
 
-const Curves = ({
+export const Curves = ({
   width = 0,
   height = 0,
   points = defData,
   bgcolor = "rgb(112, 234, 250)",
+  padding = { l: 30, r: 30, t: 30, b: 120 },
   ...props
 }) => {
   const coverRef = useRef(null);
   const canvasRef = useRef(null);
   const fgcolor = "white";
   const lineWidth = 3;
-  const canvasOffset = { l: 30, r: 30, t: 30, b: 120 };
 
   const getPoints = useCallback(() => {
     if (width == 0) return [];
     const canvas = { width, height };
-    return pointsToCanvas(points, canvasOffset, canvas);
+    return pointsToCanvas(points, padding, canvas);
   }, [points, width, height]);
 
   useEffect(() => {
@@ -134,8 +140,8 @@ const Curves = ({
     ctx.strokeStyle = bgcolor;
     ctx.stroke();
 
-    ctx.lineTo(width - canvasOffset.r, height - 20);
-    ctx.lineTo(canvasOffset.l, height - 20);
+    ctx.lineTo(width - padding.r, height - 20);
+    ctx.lineTo(padding.l, height - 20);
 
     const grd = ctx.createLinearGradient(0, 0, 0, height);
     let color = bgcolor.replace(")", ", 0.7)");
@@ -239,6 +245,42 @@ const Curves = ({
     <div className="position-relative">
       <canvas ref={coverRef} {...props} style={{ position: "absolute" }} />
       <canvas ref={canvasRef} {...props} />
+    </div>
+  );
+};
+
+export const AdjCurves = ({ className = "", style, ...props }) => {
+  const cref = useRef();
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const [timeoutID, setTimeoutID] = useState(null);
+
+  const onResize = () => {
+    if (timeoutID == null) {
+      setTimeoutID(
+        setTimeout(() => {
+          setSize({
+            w: cref.current.clientWidth,
+            h: cref.current.clientHeight,
+          });
+          clearTimeout(timeoutID);
+          setTimeoutID(null);
+        }, 500)
+      );
+    }
+  };
+
+  useEffect(() => {
+    onResize();
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => window.removeEventListener("resize", onResize);
+  }, [size]);
+
+  return (
+    <div ref={cref} className style={style}>
+      <Curves height={size.h} width={size.w} {...props} />
     </div>
   );
 };
